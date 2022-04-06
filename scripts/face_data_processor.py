@@ -4,19 +4,21 @@ import argparse
 from pathlib import Path
 from face_data_utils import extract_face_edge_map_from_single_image
 
+save_frame_idx = 0
 
-def extract_inputs_and_outputs_for_one_video(video_idx, video_path, target_h_w, skip_frame):
-    videos_dir = str(Path(video_path).parent).replace("_videos", "")
 
-    inputs_dir = videos_dir + "_inputs"
-    os.makedirs(os.path.join(inputs_dir, str(video_idx).zfill(4)), exist_ok=True)
+def extract_inputs_and_outputs_for_one_video(video_path, target_h_w, skip_frame):
+    global save_frame_idx
+    videos_dir = str(Path(video_path).parent.parent)
 
-    outputs_dir = videos_dir + "_outputs"
-    os.makedirs(os.path.join(outputs_dir, str(video_idx).zfill(4)), exist_ok=True)
+    inputs_dir = os.path.join(videos_dir, "input")
+    os.makedirs(os.path.join(inputs_dir), exist_ok=True)
+
+    outputs_dir = os.path.join(videos_dir, "output")
+    os.makedirs(os.path.join(outputs_dir), exist_ok=True)
 
     cap = cv2.VideoCapture(video_path)
     read_frame_idx = 0
-    save_frame_idx = 0
     while True:
         success, image = cap.read()
 
@@ -39,7 +41,7 @@ def extract_inputs_and_outputs_for_one_video(video_idx, video_path, target_h_w, 
         # Write cropped_and_resized_image to disk
         cv2.imwrite(
             os.path.join(
-                outputs_dir, str(video_idx).zfill(4), str(save_frame_idx).zfill(4)
+                outputs_dir, str(save_frame_idx).zfill(5)
             )
             + ".png",
             cropped_and_resized_image
@@ -48,7 +50,7 @@ def extract_inputs_and_outputs_for_one_video(video_idx, video_path, target_h_w, 
         # Write face_edge_map to disk
         cv2.imwrite(
             os.path.join(
-                inputs_dir, str(video_idx).zfill(4), str(save_frame_idx).zfill(4)
+                inputs_dir, str(save_frame_idx).zfill(5)
             )
             + ".png",
             face_edge_map
@@ -59,16 +61,16 @@ def extract_inputs_and_outputs_for_one_video(video_idx, video_path, target_h_w, 
 
 
 def extract_frames_and_edges_for_all_videos(videos_dir, target_h_w, skip_frame):
-    for split in ["train", "val", "test"]:
-        current_videos_dir = os.path.join(videos_dir, split + "_videos")
+    for split in ["train", "validation", "test"]:
+        current_videos_dir = os.path.join(videos_dir, split, "videos")
         video_paths = [
-            os.path.join(videos_dir, split + "_videos", video_name)
+            os.path.join(videos_dir, split, "videos", video_name)
             for video_name in sorted(os.listdir(current_videos_dir))
             if len(video_name) >= 4 and video_name[-4:] == ".avi"
         ]
 
-        for video_idx, video_path in enumerate(video_paths):
-            extract_inputs_and_outputs_for_one_video(video_idx, video_path, target_h_w, skip_frame)
+        for video_path in video_paths:
+            extract_inputs_and_outputs_for_one_video(video_path, target_h_w, skip_frame)
 
 
 if __name__ == "__main__":
