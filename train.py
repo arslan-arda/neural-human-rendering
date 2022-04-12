@@ -21,6 +21,8 @@ See frequently asked questions at: https://github.com/junyanz/pytorch-CycleGAN-a
 import time
 
 import torchvision.utils
+import torch.backends.cudnn
+torch.backends.cudnn.benchmark = True
 
 from data import create_dataset
 from models import create_model

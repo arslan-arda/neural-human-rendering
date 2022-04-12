@@ -111,7 +111,10 @@ def init_net(net, init_type='normal', init_gain=0.02, gpu_ids=[]):
     if len(gpu_ids) > 0:
         assert(torch.cuda.is_available())
         net.to(gpu_ids[0])
+        # TODO: check
+        # net.to('cuda')
         net = torch.nn.DataParallel(net, gpu_ids)  # multi-GPUs
+        print('Sent model to gpu')
     init_weights(net, init_type, init_gain=init_gain)
     return net
 
@@ -367,6 +370,8 @@ class ResnetGenerator(nn.Module):
         model += [nn.Tanh()]
 
         self.model = nn.Sequential(*model)
+
+        print('Initialized a generator')
 
     def forward(self, input):
         """Standard forward"""

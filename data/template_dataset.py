@@ -16,7 +16,9 @@ from os import listdir
 from os.path import isfile, join
 
 from PIL import Image
-from data.base_dataset import BaseDataset, get_transform
+from data.base_dataset import BaseDataset, get_transform, get_params
+
+
 # from data.image_folder import make_dataset
 # from PIL import Image
 
@@ -35,7 +37,7 @@ class TemplateDataset(BaseDataset):
             the modified parser.
         """
         parser.add_argument('--datasplit', type=str, default='train', help='directory')
-        parser.set_defaults(max_dataset_size=10)  # specify dataset-specific default values
+        # parser.set_defaults(max_dataset_size=10)  # specify dataset-specific default values
         return parser
 
     def __init__(self, opt):
@@ -61,8 +63,6 @@ class TemplateDataset(BaseDataset):
         self.image_paths = paths  # You can call sorted(make_dataset(self.root, opt.max_dataset_size)) to get all the image paths under the directory self.root
         print(len(self.image_paths), self.image_paths[0])
         # define the default transform function. You can use <base_dataset.get_transform>; You can also define your custom transform function
-        self.transform_rgb = get_transform(opt)
-        self.transform_g = get_transform(opt, grayscale=True)
 
     def __getitem__(self, index):
         """Return a data point and its metadata information.
@@ -79,6 +79,9 @@ class TemplateDataset(BaseDataset):
         Step 4: return a data point as a dictionary.
         """
         path = self.image_paths[index]    # needs to be a string
+        transform_params = get_params(self.opt, (self.opt.crop_size, self.opt.crop_size))
+        self.transform_g = get_transform(self.opt, transform_params, grayscale=True)
+        self.transform_rgb = get_transform(self.opt, transform_params, grayscale=False, normalize=True)
         data_A = self.transform_g(Image.open(path))    # needs to be a tensor
         data_B = self.transform_rgb(Image.open(path.replace('input', 'output')))    # needs to be a tensor
         return {'A': data_A, 'B': data_B, 'path': path}
