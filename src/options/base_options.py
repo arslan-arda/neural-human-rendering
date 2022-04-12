@@ -1,9 +1,9 @@
 import argparse
 import os
-from util import util
+from src.util import util
 import torch
-import models
-import data
+import src.models as models
+import src.data as data
 
 
 class BaseOptions():
