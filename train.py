@@ -49,7 +49,8 @@ if __name__ == '__main__':
         print('Start iterating data')
         for i, data in enumerate(dataset):  # inner loop within one epoch
 
-            torchvision.utils.save_image([data['A'], data['B']], 'test.png')
+            torchvision.utils.save_image(data['A'], 'testA.png')
+            torchvision.utils.save_image(data['B'], 'testB.png')
             iter_start_time = time.time()  # timer for computation per iteration
             if total_iters % opt.print_freq == 0:
                 t_data = iter_start_time - iter_data_time
