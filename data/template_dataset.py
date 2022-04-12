@@ -11,7 +11,9 @@ You need to implement the following functions:
     -- <__getitem__>: Return a data point and its metadata information.
     -- <__len__>: Return the number of images.
 """
-from os import walk
+import os
+from os import listdir
+from os.path import isfile, join
 
 from PIL import Image
 from data.base_dataset import BaseDataset, get_transform
@@ -32,7 +34,7 @@ class TemplateDataset(BaseDataset):
         Returns:
             the modified parser.
         """
-        parser.add_argument('--dataset_directory', type=str, default='E:/neural/face/', help='directory')
+        parser.add_argument('--datasplit', type=str, default='train', help='directory')
         parser.set_defaults(max_dataset_size=10)  # specify dataset-specific default values
         return parser
 
@@ -50,10 +52,17 @@ class TemplateDataset(BaseDataset):
         # save the option and dataset root
         BaseDataset.__init__(self, opt)
         # get the image paths of your dataset;
-        self.image_paths = next(walk(opt.dataset_directory + '/train/input/'), (None, None, []))[2]  # You can call sorted(make_dataset(self.root, opt.max_dataset_size)) to get all the image paths under the directory self.root
+        root = opt.dataroot + opt.datasplit
+        paths = []
+        for path, dir, files in os.walk(root):
+            if 'input' in path:
+                for file in files:
+                    paths.extend([(path + '/' + file).replace('\\', '/')])
+        self.image_paths = paths  # You can call sorted(make_dataset(self.root, opt.max_dataset_size)) to get all the image paths under the directory self.root
         print(len(self.image_paths), self.image_paths[0])
         # define the default transform function. You can use <base_dataset.get_transform>; You can also define your custom transform function
-        self.transform = get_transform(opt)
+        self.transform_rgb = get_transform(opt)
+        self.transform_g = get_transform(opt, grayscale=True)
 
     def __getitem__(self, index):
         """Return a data point and its metadata information.
@@ -70,9 +79,9 @@ class TemplateDataset(BaseDataset):
         Step 4: return a data point as a dictionary.
         """
         path = self.image_paths[index]    # needs to be a string
-        data_A = self.transform(Image.open(path))    # needs to be a tensor
-        data_B = self.transform(Image.open(path.replace('input', 'output')))    # needs to be a tensor
-        return {'data_A': data_A, 'data_B': data_B, 'path': path}
+        data_A = self.transform_g(Image.open(path))    # needs to be a tensor
+        data_B = self.transform_rgb(Image.open(path.replace('input', 'output')))    # needs to be a tensor
+        return {'A': data_A, 'B': data_B, 'path': path}
 
     def __len__(self):
         """Return the total number of images."""
