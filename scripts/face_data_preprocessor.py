@@ -23,22 +23,29 @@ def extract_frames_and_keypoints_for_one_video(video_idx, video_path):
     save_frame_idx = 0
     while True:
         success, image = cap.read()
+
+        # end of video
         if not success:
             break
 
-        # Use every 6th frame
-        if (read_frame_idx + 1) % 6 != 0:
-            read_frame_idx += 1
-            continue
-        cv2.imwrite(
-            os.path.join(
-                frames_dir, str(video_idx).zfill(4), str(save_frame_idx).zfill(4)
-            )
-            + ".jpg",
-            image,
-        )
         dets = detector(image, 1)
+
+        # detected at least one face
         if len(dets) > 0:
+
+            # Use every 6th frame where we detected a face
+            if (read_frame_idx + 1) % 6 != 0:
+                read_frame_idx += 1
+                continue
+
+            cv2.imwrite(
+                os.path.join(
+                    frames_dir, str(video_idx).zfill(4), str(save_frame_idx).zfill(4)
+                )
+                + ".jpg",
+                image,
+            )
+
             shape = predictor(image, dets[0])
             points = np.empty([68, 2], dtype=int)
             for b in range(68):
@@ -51,14 +58,12 @@ def extract_frames_and_keypoints_for_one_video(video_idx, video_path):
                 + ".txt"
             )
             np.savetxt(keypoint_path, points, fmt="%d", delimiter=",")
-        read_frame_idx += 1
-        save_frame_idx += 1
+            read_frame_idx += 1
+            save_frame_idx += 1
 
 
 def extract_frames_and_keypoints_for_all_videos(videos_dir):
     for split in ["train", "val", "test"]:
-        # if split == "train":
-        #     continue
         current_videos_dir = os.path.join(videos_dir, split, "original")
         video_paths = [
             os.path.join(videos_dir, split, "original", video_name)
@@ -67,9 +72,6 @@ def extract_frames_and_keypoints_for_all_videos(videos_dir):
         ]
 
         for video_idx, video_path in enumerate(video_paths):
-            # if split == "val" and video_idx < 97:
-            #     continue
-
             extract_frames_and_keypoints_for_one_video(video_idx, video_path)
 
 
@@ -82,4 +84,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    extract_frames_and_keypoints_for_all_videos(args.videos_dir)
+    videos_dir = args.videos_dir
+
+    videos_dir = "/cluster/scratch/aarslan/virtual_humans_data/datasets/face"
+
+    extract_frames_and_keypoints_for_all_videos(videos_dir)
