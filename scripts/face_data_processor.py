@@ -30,7 +30,7 @@ def extract_inputs_and_outputs_for_one_video(video_path, target_h_w, skip_frame)
         if read_frame_idx % skip_frame != 0:
             read_frame_idx += 1
             continue
-        
+
         try:
             cropped_and_resized_image, face_edge_map = extract_face_edge_map_from_single_image(image, target_h_w)
         except Exception as e:

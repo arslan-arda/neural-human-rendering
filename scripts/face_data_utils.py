@@ -5,7 +5,6 @@ import torch
 import torch.nn.functional as F
 from scipy.optimize import curve_fit
 
-
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
 
@@ -92,7 +91,7 @@ def interp_points(x, y):
         if x[0] > x[-1]:
             x = list(reversed(x))
             y = list(reversed(y))
-        curve_x = np.linspace(x[0], x[-1], int(np.round(x[-1]-x[0])))
+        curve_x = np.linspace(x[0], x[-1], int(np.round(x[-1] - x[0])))
         if len(x) < 3:
             curve_y = linear(curve_x, *popt)
         else:
@@ -102,7 +101,7 @@ def interp_points(x, y):
 
 def func(x, a, b, c):
     r"""Quadratic fitting function."""
-    return a * x**2 + b * x + c
+    return a * x ** 2 + b * x + c
 
 
 def linear(x, a, b):
@@ -124,14 +123,14 @@ def connect_face_keypoints(keypoints, img_size):
     # Mapping from keypoint index to facial part.
     part_list = [[list(range(0, 17)) + (
         (list(range(68, 83)) + [0]) if add_upper_face else [])],  # ai_emoji
-                      [range(17, 22)],  # right eyebrow
-                      [range(22, 27)],  # left eyebrow
-                      [[28, 31], range(31, 36), [35, 28]],  # nose
-                      [[36, 37, 38, 39], [39, 40, 41, 36]],  # right eye
-                      [[42, 43, 44, 45], [45, 46, 47, 42]],  # left eye
-                      [range(48, 55), [54, 55, 56, 57, 58, 59, 48],
-                       range(60, 65), [64, 65, 66, 67, 60]],  # mouth and tongue
-    ]
+                 [range(17, 22)],  # right eyebrow
+                 [range(22, 27)],  # left eyebrow
+                 [[28, 31], range(31, 36), [35, 28]],  # nose
+                 [[36, 37, 38, 39], [39, 40, 41, 36]],  # right eye
+                 [[42, 43, 44, 45], [45, 46, 47, 42]],  # left eye
+                 [range(48, 55), [54, 55, 56, 57, 58, 59, 48],
+                  range(60, 65), [64, 65, 66, 67, 60]],  # mouth and tongue
+                 ]
     if add_upper_face:
         pts = keypoints[:17, :].astype(np.int32)
         baseline_y = (pts[0:1, 1] + pts[-1:, 1]) / 2
@@ -142,7 +141,7 @@ def connect_face_keypoints(keypoints, img_size):
 
     edge_len = 3  # Interpolate 3 keypoints to form a curve when drawing edges.
     bw = max(1, H // 256)  # Width of the stroke.
-    
+
     # Edge map for the face region from keypoints.
     im_edges = np.zeros((H, W, 1), np.uint8)
     for edge_list in part_list:
@@ -164,12 +163,11 @@ def connect_face_keypoints(keypoints, img_size):
 
 def get_dlib_keypoints_from_image(img):
     r"""Get face keypoints from an image.
-
     Args:
         img (H x W x 3 numpy array): Input images.
         predictor_path (str): Path to the predictor model.
     """
-    
+
     keypoints = np.zeros([68, 2], dtype=int)
     dets = detector(img, 1)
     if len(dets) > 0:
@@ -223,11 +221,15 @@ def crop_and_resize(img, coords, size=None, method='bilinear'):
 
     cropped_and_resized_image = img[min_y:max_y, min_x:max_x].copy()
     if size is not None:
-        cropped_and_resized_image = torch.tensor(cropped_and_resized_image, dtype=torch.float).unsqueeze(0).permute(0, 3, 1, 2)
+        cropped_and_resized_image = torch.tensor(cropped_and_resized_image, dtype=torch.float).unsqueeze(0).permute(0,
+                                                                                                                    3,
+                                                                                                                    1,
+                                                                                                                    2)
         if method == 'nearest':
             cropped_and_resized_image = F.interpolate(cropped_and_resized_image, size=size, mode=method)
         else:
-            cropped_and_resized_image = F.interpolate(cropped_and_resized_image, size=size, mode=method, align_corners=False)
+            cropped_and_resized_image = F.interpolate(cropped_and_resized_image, size=size, mode=method,
+                                                      align_corners=False)
         cropped_and_resized_image = cropped_and_resized_image[0].permute(1, 2, 0).numpy().astype(np.uint8)
     return cropped_and_resized_image
 
@@ -246,4 +248,3 @@ def extract_face_edge_map_from_single_image(img, target_h_w):
     keypoints = get_dlib_keypoints_from_image(cropped_and_resized_img)
     face_edge_map = connect_face_keypoints(keypoints, (target_h_w, target_h_w))
     return cropped_and_resized_img, face_edge_map
-    
