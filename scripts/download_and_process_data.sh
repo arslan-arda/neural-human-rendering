@@ -5,7 +5,7 @@ DATASET_DIR=../datasets
 mkdir $DATASET_DIR
 
 FACE_DIR=$DATASET_DIR/face
-python3 face_data_downloader.py -d compressed -o $DATASET_DIR --not_altered --not_mask --sample_only
+python3 face_data_downloader.py -d compressed -o $DATASET_DIR --not_altered --not_mask
 mv $DATASET_DIR/FaceForensics_compressed $FACE_DIR
 mkdir $FACE_DIR/train/videos; mv $FACE_DIR/train/original/* $FACE_DIR/train/videos; rm -rf $FACE_DIR/train/original
 mkdir $FACE_DIR/validation; mkdir $FACE_DIR/validation/videos; mv $FACE_DIR/val/original/* $FACE_DIR/validation/videos; rm -rf $FACE_DIR/val
