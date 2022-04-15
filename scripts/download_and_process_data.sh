@@ -1,7 +1,9 @@
 # source $CONDA_PREFIX/etc/profile.d/conda.sh
 # conda activate virtual_humans
 
-DATASET_DIR=../datasets
+USER_NAME=$(whoami)
+
+DATASET_DIR=/cluster/scratch/$USER_NAME/virtual_humans_data
 mkdir $DATASET_DIR
 
 FACE_DIR=$DATASET_DIR/face
