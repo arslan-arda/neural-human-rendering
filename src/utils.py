@@ -10,17 +10,25 @@ from models import Generator, CNNDiscriminator
 
 def get_argument_parser():
     parser = argparse.ArgumentParser(description="Arguments for running the script")
-    parser.add_argument("--datasets_dir", type=str, required=True)
+    parser.add_argument(
+        "--datasets_dir",
+        type=str,
+        required=True,
+        # default="/cluster/scratch/aarslan/virtual_humans_data",  # fix
+        help='Dataset type should be "face" or "body_smplpix".',
+    )
     parser.add_argument(
         "--dataset_type",
         type=str,
         required=True,
+        # default="face",  # fix
         help='Dataset type should be "face" or "body_smplpix".',
     )
     parser.add_argument(
         "--discriminator_type",
         type=str,
         required=True,
+        # default="cnn",  # fix
         help='Discriminator type should be "cnn", "vit" or "mlp-mixer".',
     )
     parser.add_argument(
@@ -48,23 +56,37 @@ def set_seeds(cfg):
 
 
 def get_dataset(cfg, split):
-    input_image_paths = os.path.join(
-        cfg["datasets_dir"], cfg["dataset_type"], split, "input", f"*.png"
+    input_images_dir = os.path.join(
+        cfg["datasets_dir"], cfg["dataset_type"], split, "input"
     )
-    output_image_paths = os.path.join(
-        cfg["datasets_dir"], cfg["dataset_type"], split, "output", f"*.png"
+    input_image_paths = sorted(
+        [
+            os.path.join(input_images_dir, input_image_name)
+            for input_image_name in os.listdir(input_images_dir)
+            if input_image_name[-4:] == ".png"
+        ]
     )
+    real_image_paths = sorted(
+        [
+            input_image_path.replace("input", "output")
+            for input_image_path in input_image_paths
+        ]
+    )
+
     ds = tf.data.Dataset.zip(
         (
-            tf.data.Dataset.list_files(input_image_paths),
-            tf.data.Dataset.list_files(output_image_paths),
+            tf.data.Dataset.from_tensor_slices(input_image_paths),
+            tf.data.Dataset.from_tensor_slices(real_image_paths),
         )
     )
 
     if split == "train":
         ds = ds.map(
-            lambda x, y: load_images_train(
-                x, y, cfg["image_height"], cfg["image_width"]
+            lambda input_image_path, real_image_path: load_images_train(
+                input_image_path,
+                real_image_path,
+                cfg["image_height"],
+                cfg["image_width"],
             ),
             num_parallel_calls=tf.data.AUTOTUNE,
         )
@@ -72,7 +94,12 @@ def get_dataset(cfg, split):
         ds = ds.batch(cfg["batch_size"])
     elif split in ["validation", "test"]:
         ds = ds.map(
-            lambda x, y: load_images_eval(x, y, cfg["image_height"], cfg["image_width"])
+            lambda input_image_path, real_image_path: load_images_eval(
+                input_image_path,
+                real_image_path,
+                cfg["image_height"],
+                cfg["image_width"],
+            )
         )
         ds = ds.batch(cfg["batch_size"])
     else:
@@ -147,10 +174,10 @@ def normalize(input_image, real_image):
 
 @tf.function()
 def random_jitter(input_image, real_image, image_height, image_width):
-    # Resizing to 286x286
-    input_image, real_image = resize(input_image, real_image, 286, 286)
+    input_image, real_image = resize(
+        input_image, real_image, int(image_height * 1.15), int(image_width * 1.15)
+    )
 
-    # Random cropping back to 256x256
     input_image, real_image = random_crop(
         input_image, real_image, image_height, image_width
     )
