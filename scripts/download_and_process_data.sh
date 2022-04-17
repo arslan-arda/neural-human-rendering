@@ -1,27 +1,35 @@
-# source $CONDA_PREFIX/etc/profile.d/conda.sh
-# conda activate virtual_humans
+ #!/bin/bash
 
-USER_NAME=$(whoami)
+ # Reading arguments and mapping to respective variables
+ while [ $# -gt 0 ]; do
+   if [[ $1 == *"--"* ]]; then
+        v="${1/--/}"
+        declare $v
+   fi
+  shift
+ done
 
-DATASET_DIR=/cluster/scratch/$USER_NAME/virtual_humans_data
-mkdir $DATASET_DIR
+mkdir $DATASETS_DIR
 
-FACE_DIR=$DATASET_DIR/face
-python3 face_data_downloader.py -d compressed -o $DATASET_DIR --not_altered --not_mask
-mv $DATASET_DIR/FaceForensics_compressed $FACE_DIR
-mkdir $FACE_DIR/train/videos; mv $FACE_DIR/FaceForensics_compressed/train/original/* $FACE_DIR/train/videos; rm -rf $FACE_DIR/train/original
-mkdir $FACE_DIR/validation; mkdir $FACE_DIR/validation/videos; mv $FACE_DIR/FaceForensics_compressed/val/original/* $FACE_DIR/validation/videos; rm -rf $FACE_DIR/val
-mkdir $FACE_DIR/test/videos; mv $FACE_DIR/FaceForensics_compressed/test/original/* $FACE_DIR/test/videos; rm -rf $FACE_DIR/test/original
-python3 face_data_processor.py --videos_dir $FACE_DIR
-rm -rf $FACE_DIR/train/videos; rm -rf $FACE_DIR/validation/videos; rm -rf $FACE_DIR/test/videos
+FACE_DIR=$DATASETS_DIR/face
+mkdir $FACE_DIR
 
-wget -O $DATASET_DIR/body.zip "https://www.dropbox.com/s/coapl05ahqalh09/smplpix_data_test_final.zip?dl=1"
-unzip $DATASET_DIR/body.zip -d $DATASET_DIR/body_smplpix
-mv $DATASET_DIR/body_smplpix/smplpix_data/* $DATASET_DIR/body_smplpix/
-rm -rf $DATASET_DIR/body_smplpix/smplpix_data
-rm -rf $DATASET_DIR/body.zip
-rm -rf $DATASET_DIR/body_smplpix/validation/input/*; rm -rf $DATASET_DIR/body_smplpix/validation/output/*
-mv $DATASET_DIR/body_smplpix/train/input/009* $DATASET_DIR/body_smplpix/validation/input/
-mv $DATASET_DIR/body_smplpix/train/input/01* $DATASET_DIR/body_smplpix/validation/input/
-mv $DATASET_DIR/body_smplpix/train/output/009* $DATASET_DIR/body_smplpix/validation/output/
-mv $DATASET_DIR/body_smplpix/train/output/01* $DATASET_DIR/body_smplpix/validation/output/
+python3 face_data_downloader.py -d compressed -o $DATASETS_DIR --not_altered --not_mask
+mv $DATASETS_DIR/FaceForensics_compressed/* $FACE_DIR; rm -rf $DATASETS_DIR/FaceForensics_compressed
+mkdir $FACE_DIR/validation; mkdir $FACE_DIR/validation/original; mv $FACE_DIR/val/original/* $FACE_DIR/validation/original; rm -rf $FACE_DIR/val
+bsub -n 1 -W 24:00 -R "rusage[mem=8192]" python face_data_processor.py --videos_dir $FACE_DIR --split train
+bsub -n 1 -W 24:00 -R "rusage[mem=8192]" python face_data_processor.py --videos_dir $FACE_DIR --split validation
+bsub -n 1 -W 24:00 -R "rusage[mem=8192]" python face_data_processor.py --videos_dir $FACE_DIR --split test
+
+wget -O $DATASETS_DIR/body.zip "https://www.dropbox.com/s/coapl05ahqalh09/smplpix_data_test_final.zip?dl=1"
+unzip $DATASETS_DIR/body.zip -d $DATASETS_DIR/body_smplpix_temp
+mv $DATASETS_DIR/body_smplpix_temp/smplpix_data/* $DATASETS_DIR/body_smplpix_temp/
+rm -rf $DATASETS_DIR/body_smplpix_temp/smplpix_data
+rm -rf $DATASETS_DIR/body.zip
+rm -rf $DATASETS_DIR/body_smplpix_temp/validation/input/*; rm -rf $DATASETS_DIR/body_smplpix_temp/validation/output/*
+mv $DATASETS_DIR/body_smplpix_temp/train/input/009* $DATASETS_DIR/body_smplpix_temp/validation/input/
+mv $DATASETS_DIR/body_smplpix_temp/train/input/01* $DATASETS_DIR/body_smplpix_temp/validation/input/
+mv $DATASETS_DIR/body_smplpix_temp/train/output/009* $DATASETS_DIR/body_smplpix_temp/validation/output/
+mv $DATASETS_DIR/body_smplpix_temp/train/output/01* $DATASETS_DIR/body_smplpix_temp/validation/output/
+python3 body_data_processor.py --videos_dir $DATASETS_DIR/body_smplpix_temp
+rm -rf $DATASETS_DIR/body_smplpix_temp

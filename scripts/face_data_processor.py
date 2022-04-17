@@ -32,7 +32,10 @@ def extract_inputs_and_outputs_for_one_video(video_path, target_h_w, skip_frame)
             continue
 
         try:
-            cropped_and_resized_image, face_edge_map = extract_face_edge_map_from_single_image(image, target_h_w)
+            (
+                cropped_and_resized_image,
+                face_edge_map,
+            ) = extract_face_edge_map_from_single_image(image, target_h_w)
         except Exception as e:
             print(e)
             read_frame_idx += 1
@@ -40,37 +43,30 @@ def extract_inputs_and_outputs_for_one_video(video_path, target_h_w, skip_frame)
 
         # Write cropped_and_resized_image to disk
         cv2.imwrite(
-            os.path.join(
-                outputs_dir, str(save_frame_idx).zfill(5)
-            )
-            + ".png",
-            cropped_and_resized_image
+            os.path.join(outputs_dir, str(save_frame_idx).zfill(7)) + ".png",
+            cropped_and_resized_image,
         )
 
         # Write face_edge_map to disk
         cv2.imwrite(
-            os.path.join(
-                inputs_dir, str(save_frame_idx).zfill(5)
-            )
-            + ".png",
-            face_edge_map
+            os.path.join(inputs_dir, str(save_frame_idx).zfill(7)) + ".png",
+            face_edge_map,
         )
 
         read_frame_idx += 1
         save_frame_idx += 1
 
 
-def extract_frames_and_edges_for_all_videos(videos_dir, target_h_w, skip_frame):
-    for split in ["train", "validation", "test"]:
-        current_videos_dir = os.path.join(videos_dir, split, "videos")
-        video_paths = [
-            os.path.join(videos_dir, split, "videos", video_name)
-            for video_name in sorted(os.listdir(current_videos_dir))
-            if len(video_name) >= 4 and video_name[-4:] == ".avi"
-        ]
+def extract_frames_and_edges_for_all_videos(videos_dir, target_h_w, skip_frame, split):
+    current_videos_dir = os.path.join(videos_dir, split, "original")
+    video_paths = [
+        os.path.join(videos_dir, split, "original", video_name)
+        for video_name in sorted(os.listdir(current_videos_dir))
+        if len(video_name) >= 4 and video_name[-4:] == ".avi"
+    ]
 
-        for video_path in video_paths:
-            extract_inputs_and_outputs_for_one_video(video_path, target_h_w, skip_frame)
+    for video_path in video_paths:
+        extract_inputs_and_outputs_for_one_video(video_path, target_h_w, skip_frame)
 
 
 if __name__ == "__main__":
@@ -80,12 +76,23 @@ if __name__ == "__main__":
         "--videos_dir", type=str, help="Directory where the videos are located."
     )
     parser.add_argument(
-        "--target_h_w", type=int, help="Target width and height of face edge map.", default=512
+        "--split", type=str, help="Split should be 'train', 'test' or 'validation'."
     )
     parser.add_argument(
-        "--skip_frame", type=int, help="Number of frames to skip while reading.", default=6
+        "--target_h_w",
+        type=int,
+        help="Target width and height of face edge map.",
+        default=256,
+    )
+    parser.add_argument(
+        "--skip_frame",
+        type=int,
+        help="Number of frames to skip while reading.",
+        default=1,
     )
 
     args = parser.parse_args()
 
-    extract_frames_and_edges_for_all_videos(args.videos_dir, args.target_h_w, args.skip_frame)
+    extract_frames_and_edges_for_all_videos(
+        args.videos_dir, args.target_h_w, args.skip_frame, args.split
+    )
