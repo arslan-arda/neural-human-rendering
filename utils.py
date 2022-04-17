@@ -10,24 +10,17 @@ from models import Generator, CNNDiscriminator
 
 def get_argument_parser():
     parser = argparse.ArgumentParser(description="Arguments for running the script")
-    parser.add_argument(
-        "--datasets_dir",
-        type=str,
-        # required=True,
-        default="/cluster/scratch/aarslan/virtual_humans_data",  # fix
-    )
+    parser.add_argument("--datasets_dir", type=str, required=True)
     parser.add_argument(
         "--dataset_type",
         type=str,
-        # required=True,
-        default="face",  # fix
+        required=True,
         help='Dataset type should be "face" or "body_smplpix".',
     )
     parser.add_argument(
         "--discriminator_type",
         type=str,
-        # required=True,
-        default="cnn",  # fix
+        required=True,
         help='Discriminator type should be "cnn", "vit" or "mlp-mixer".',
     )
     parser.add_argument(
@@ -66,10 +59,10 @@ def set_seeds(cfg):
 
 def get_dataset(cfg, split):
     input_image_paths = os.path.join(
-        cfg["datasets_dir"], cfg["dataset_type"], split, "input", f"*0.png"  # fix
+        cfg["datasets_dir"], cfg["dataset_type"], split, "input", f"*.png"
     )
     output_image_paths = os.path.join(
-        cfg["datasets_dir"], cfg["dataset_type"], split, "output", f"*0.png"  # fix
+        cfg["datasets_dir"], cfg["dataset_type"], split, "output", f"*.png"
     )
     ds = tf.data.Dataset.zip(
         (

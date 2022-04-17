@@ -4,7 +4,9 @@
 
 ```
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+
 chmod +x Miniconda3-latest-Linux-x86_64.sh
+
 ./Miniconda3-latest-Linux-x86_64.sh
 ```
 
@@ -26,7 +28,9 @@ conda activate virtual_humans
 
 ```
 cd scripts
+
 chmod +x download_and_process_data.sh
+
 ./download_and_process_data.sh "--DATASETS_DIR=/path/to/data/directory"
 ```
 
@@ -34,6 +38,7 @@ chmod +x download_and_process_data.sh
 
 ```
 cd src
+
 module load gcc/8.2.0 python_gpu/3.9.9
 ```
 
