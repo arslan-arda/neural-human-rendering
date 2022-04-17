@@ -56,9 +56,7 @@ def get_argument_parser():
     parser.add_argument("--patch_size", type=int, default=6, help="")
     parser.add_argument("--projection_dim", type=int, default=64, help="")
     parser.add_argument("--norm_eps", type=float, default=1e-6, help="")
-    parser.add_argument(
-        "--vanilla", type=bool, dest="vanilla", action="store_true", default=False
-    )
+    parser.add_argument("--vanilla", dest="vanilla", action="store_true")
     parser.add_argument("--num_heads", type=int, default=4, help="")
     parser.add_argument("--num_transformer_layers", type=int, default=8, help="")
     parser.add_argument("--num_classes", type=int, default=2, help="")
