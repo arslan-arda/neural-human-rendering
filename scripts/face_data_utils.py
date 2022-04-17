@@ -7,7 +7,6 @@ import torch
 import torch.nn.functional as F
 from scipy.optimize import curve_fit
 
-
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
 
@@ -173,7 +172,6 @@ def connect_face_keypoints(keypoints, img_size):
 
 def get_dlib_keypoints_from_image(img):
     r"""Get face keypoints from an image.
-
     Args:
         img (H x W x 3 numpy array): Input images.
         predictor_path (str): Path to the predictor model.

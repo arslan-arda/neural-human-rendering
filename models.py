@@ -109,10 +109,10 @@ def CNNDiscriminator(cfg):
     initializer = tf.random_normal_initializer(0.0, 0.02)
 
     inp = tf.keras.layers.Input(
-        shape=[256, 256, cfg["num_in_channels"]], name="input_image"
+        shape=[cfg["image_height"], cfg["image_width"], cfg["num_in_channels"]], name="input_image"
     )
     tar = tf.keras.layers.Input(
-        shape=[256, 256, cfg["num_out_channels"]], name="target_image"
+        shape=[cfg["image_height"], cfg["image_width"], cfg["num_out_channels"]], name="target_image"
     )
 
     x = tf.keras.layers.concatenate([inp, tar])  # (batch_size, 256, 256, channels*2)
