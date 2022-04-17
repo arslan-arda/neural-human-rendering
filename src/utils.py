@@ -10,18 +10,33 @@ from models import Generator, CNNDiscriminator
 
 def get_argument_parser():
     parser = argparse.ArgumentParser(description="Arguments for running the script")
-    parser.add_argument("--datasets_dir", type=str, required=True)
+    parser.add_argument(
+        "--datasets_dir",
+        type=str,
+        # required=True,
+        default="/cluster/scratch/aarslan/old_virtual_humans_data",  # fix
+        help='Dataset type should be "face" or "body_smplpix".',
+    )
     parser.add_argument(
         "--dataset_type",
         type=str,
         required=True,
+        # default="face",
         help='Dataset type should be "face" or "body_smplpix".',
     )
     parser.add_argument(
         "--discriminator_type",
         type=str,
-        required=True,
+        # required=True,
+        default="cnn",  # fix
         help='Discriminator type should be "cnn", "vit" or "mlp-mixer".',
+    )
+    parser.add_argument(
+        "--experiment_time",
+        type=str,
+        # required=True,
+        default="",
+        help="Used in test.py",
     )
     parser.add_argument(
         "--l1_weight",
@@ -35,7 +50,16 @@ def get_argument_parser():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--buffer_size", type=int, default=1000)
     parser.add_argument("--batch_size", type=int, default=64)
-    parser.add_argument("--num_iterations", type=int, default=40000)
+    parser.add_argument("--num_iterations", type=int, default=200000)
+
+    # VIT
+    parser.add_argument("--patch_size", type=int, default=6, help="")
+    parser.add_argument("--projection_dim", type=int, default=64, help="")
+    parser.add_argument("--norm_eps", type=float, default=1e-6, help="")
+    parser.add_argument("--vanilla", dest="vanilla", action="store_true")
+    parser.add_argument("--num_heads", type=int, default=4, help="")
+    parser.add_argument("--num_transformer_layers", type=int, default=8, help="")
+    parser.add_argument("--num_classes", type=int, default=2, help="")
 
     return parser
 
@@ -45,26 +69,41 @@ def set_seeds(cfg):
     np.random.seed(seed)
     random.seed(seed)
     tf.random.set_seed(seed)
+    tf.keras.utils.set_random_seed(cfg["seed"])
 
 
 def get_dataset(cfg, split):
-    input_image_paths = os.path.join(
-        cfg["datasets_dir"], cfg["dataset_type"], split, "input", f"*.png"
+    input_images_dir = os.path.join(
+        cfg["datasets_dir"], cfg["dataset_type"], split, "input"
     )
-    output_image_paths = os.path.join(
-        cfg["datasets_dir"], cfg["dataset_type"], split, "output", f"*.png"
+    input_image_paths = sorted(
+        [
+            os.path.join(input_images_dir, input_image_name)
+            for input_image_name in os.listdir(input_images_dir)
+            if input_image_name[-4:] == ".png"
+        ]
     )
+    real_image_paths = sorted(
+        [
+            input_image_path.replace("input", "output")
+            for input_image_path in input_image_paths
+        ]
+    )
+
     ds = tf.data.Dataset.zip(
         (
-            tf.data.Dataset.list_files(input_image_paths),
-            tf.data.Dataset.list_files(output_image_paths),
+            tf.data.Dataset.from_tensor_slices(input_image_paths),
+            tf.data.Dataset.from_tensor_slices(real_image_paths),
         )
     )
 
     if split == "train":
         ds = ds.map(
-            lambda x, y: load_images_train(
-                x, y, cfg["image_height"], cfg["image_width"]
+            lambda input_image_path, real_image_path: load_images_train(
+                input_image_path,
+                real_image_path,
+                cfg["image_height"],
+                cfg["image_width"],
             ),
             num_parallel_calls=tf.data.AUTOTUNE,
         )
@@ -72,7 +111,12 @@ def get_dataset(cfg, split):
         ds = ds.batch(cfg["batch_size"])
     elif split in ["validation", "test"]:
         ds = ds.map(
-            lambda x, y: load_images_eval(x, y, cfg["image_height"], cfg["image_width"])
+            lambda input_image_path, real_image_path: load_images_eval(
+                input_image_path,
+                real_image_path,
+                cfg["image_height"],
+                cfg["image_width"],
+            )
         )
         ds = ds.batch(cfg["batch_size"])
     else:
@@ -147,10 +191,10 @@ def normalize(input_image, real_image):
 
 @tf.function()
 def random_jitter(input_image, real_image, image_height, image_width):
-    # Resizing to 286x286
-    input_image, real_image = resize(input_image, real_image, 286, 286)
+    input_image, real_image = resize(
+        input_image, real_image, int(image_height * 1.15), int(image_width * 1.15)
+    )
 
-    # Random cropping back to 256x256
     input_image, real_image = random_crop(
         input_image, real_image, image_height, image_width
     )
@@ -244,7 +288,7 @@ def get_summary_writer(cfg):
 
 
 def generate_intermediate_images(cfg, model, test_input, ground_truth, iteration):
-    prediction = model(test_input, training=False)
+    prediction = model(test_input, training=True)
     # Getting the pixel values in the [0, 255] range to plot.
     display_list = [test_input[0], ground_truth[0], prediction[0]]
     file_names = ["input", "ground_truth", "predicted"]
@@ -261,14 +305,16 @@ def generate_intermediate_images(cfg, model, test_input, ground_truth, iteration
                 ),
                 f"{file_names[i]}.png",
             ),
-            ((np.array(display_list[i]) * 0.5 + 0.5) * 255).astype(np.int32),
+            ((np.array(display_list[i])[:, :, ::-1] * 0.5 + 0.5) * 255).astype(
+                np.int32
+            ),
         )
 
 
 def generate_final_images(cfg, model, test_ds):
     save_idx_counter = 0
     for test_input, _ in test_ds:
-        prediction = model(test_input, training=False)
+        prediction = model(test_input, training=True)
         # Getting the pixel values in the [0, 255] range to plot.
         prediction = ((prediction.numpy() * 0.5 + 0.5) * 255).astype(np.int32)
         for i in range(prediction.shape[0]):
@@ -277,6 +323,8 @@ def generate_final_images(cfg, model, test_ds):
                     get_new_directory([get_checkpoints_dir(cfg), "final_images"]),
                     f"{str(save_idx_counter).zfill(7)}.png",
                 ),
-                ((np.array(prediction[i]) * 0.5 + 0.5) * 255).astype(np.int32),
+                ((np.array(prediction[i])[:, :, ::-1] * 0.5 + 0.5) * 255).astype(
+                    np.int32
+                ),
             )
             save_idx_counter += 1

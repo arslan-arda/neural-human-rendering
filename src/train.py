@@ -65,7 +65,9 @@ def train(
     summary_writer,
     checkpoint_saver,
 ):
+    # for e_i, e_t in iter(val_ds.take(1000)):
     example_input, example_target = next(iter(val_ds.take(1)))
+
     start = time.time()
 
     for iteration, (input_image, target) in (
