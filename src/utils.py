@@ -32,6 +32,13 @@ def get_argument_parser():
         help='Discriminator type should be "cnn", "vit" or "mlp-mixer".',
     )
     parser.add_argument(
+        "--experiment_time",
+        type=str,
+        # required=True,
+        default="",
+        help="Used in test.py",
+    )
+    parser.add_argument(
         "--l1_weight",
         type=int,
         default=100,
@@ -43,7 +50,7 @@ def get_argument_parser():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--buffer_size", type=int, default=1000)
     parser.add_argument("--batch_size", type=int, default=64)
-    parser.add_argument("--num_iterations", type=int, default=40000)
+    parser.add_argument("--num_iterations", type=int, default=200000)
 
     return parser
 
@@ -288,7 +295,9 @@ def generate_intermediate_images(cfg, model, test_input, ground_truth, iteration
                 ),
                 f"{file_names[i]}.png",
             ),
-            ((np.array(display_list[i]) * 0.5 + 0.5) * 255).astype(np.int32),
+            ((np.array(display_list[i])[:, :, ::-1] * 0.5 + 0.5) * 255).astype(
+                np.int32
+            ),
         )
 
 
@@ -304,6 +313,8 @@ def generate_final_images(cfg, model, test_ds):
                     get_new_directory([get_checkpoints_dir(cfg), "final_images"]),
                     f"{str(save_idx_counter).zfill(7)}.png",
                 ),
-                ((np.array(prediction[i]) * 0.5 + 0.5) * 255).astype(np.int32),
+                ((np.array(prediction[i])[:, :, ::-1] * 0.5 + 0.5) * 255).astype(
+                    np.int32
+                ),
             )
             save_idx_counter += 1
