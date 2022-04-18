@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import cv2
 import argparse
 
@@ -17,13 +18,13 @@ if __name__ == "__main__":
         "--target_h",
         type=int,
         help="Target height of body images.",
-        default=480,
+        default=256,
     )
     parser.add_argument(
         "--target_w",
         type=int,
         help="Target width of body images.",
-        default=270,
+        default=128,
     )
 
     args = parser.parse_args()
@@ -44,4 +45,7 @@ if __name__ == "__main__":
                     (args.target_w, args.target_h),
                     interpolation=cv2.INTER_AREA,
                 )
-                cv2.imwrite(file_path.replace("_temp", ""), resized)
+                padded = np.ones((args.target_h, args.target_h, 3)) * 255
+                padding = int((args.target_h - args.target_w) / 2)
+                padded[:, padding : padding + args.target_w, :] = resized
+                cv2.imwrite(file_path.replace("_temp", ""), padded)
