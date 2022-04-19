@@ -6,7 +6,7 @@ from utils import (
     generate_intermediate_images,
     generator_loss,
     discriminator_loss,
-    get_checkpoints_dir,
+    save_new_checkpoint,
 )
 
 
@@ -65,7 +65,6 @@ def train(
     summary_writer,
     checkpoint_saver,
 ):
-    # for e_i, e_t in iter(val_ds.take(1000)):
     example_input, example_target = next(iter(val_ds.take(1)))
 
     start = time.time()
@@ -103,6 +102,4 @@ def train(
 
         # Save (checkpoint) the model every 5k steps
         if (iteration + 1) % 5000 == 0:
-            checkpoints_dir = get_checkpoints_dir(cfg)
-            checkpoint_prefix = os.path.join(checkpoints_dir, "ckpt")
-            checkpoint_saver.save(file_prefix=checkpoint_prefix)
+            save_new_checkpoint(cfg, checkpoint_saver)
