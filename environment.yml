@@ -16,7 +16,10 @@ dependencies:
   - pillow=9.0.1
   - matplotlib=3.5.1
   - ipython
+  - torchvision>=0.2.2
+  - scipy
   - pip:
     - opencv-python==4.5.5.64
     - tensorflow-gpu==2.8.0
     - keras==2.8.0
+    - pytorch-fid
