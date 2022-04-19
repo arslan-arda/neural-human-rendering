@@ -185,10 +185,13 @@ def mlp(x, hidden_units, dropout_rate):
 
 
 def create_vit_classifier(cfg):
-    inputs = layers.Input(shape=cfg['image_height'])
+    inputs = layers.Input(shape=(cfg["image_height"], cfg["image_width"], cfg["num_in_channels"]), name="input_image")
+    targets = layers.Input(shape=(cfg["image_height"], cfg["image_width"], cfg["num_out_channels"]), name="target_image")
+
+    data = layers.concatenate([inputs, targets])
     # Augment data.
     # augmented = data_augmentation(inputs)
-    augmented = inputs
+    augmented = data
     # Create patches.
     (tokens, _) = ShiftedPatchTokenization(cfg)(augmented)
     # Encode patches.
@@ -228,5 +231,5 @@ def create_vit_classifier(cfg):
     # Classify outputs.
     logits = layers.Dense(cfg['num_classes'])(features)
     # Create the Keras model.
-    model = keras.Model(inputs=inputs, outputs=logits)
+    model = keras.Model(inputs=[inputs, targets], outputs=logits)
     return model
