@@ -21,11 +21,8 @@ from train import train
 if __name__ == "__main__":
     cfg = get_argument_parser().parse_args().__dict__
 
-    cfg['mlp_head_units'] = [2048, 1024]
-    cfg['transformer_units'] = [
-        cfg['projection_dim'] * 2,
-        cfg['projection_dim']
-    ]
+    cfg["mlp_head_units"] = [2048, 1024]
+    cfg["transformer_units"] = [cfg["projection_dim"] * 2, cfg["projection_dim"]]
 
     if cfg["dataset_type"] == "face":
         cfg["num_in_channels"] = 1
@@ -35,8 +32,8 @@ if __name__ == "__main__":
     elif cfg["dataset_type"] == "body_smplpix":
         cfg["num_in_channels"] = 3
         cfg["num_out_channels"] = 3
-        cfg["image_height"] = 480
-        cfg["image_width"] = 270
+        cfg["image_height"] = 256
+        cfg["image_width"] = 256
     else:
         raise Exception(f"Not a valid dataset_type {dataset_type}.")
 
