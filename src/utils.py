@@ -34,7 +34,7 @@ def get_argument_parser():
         "--discriminator_type",
         type=str,
         choices=['cnn', 'vit', 'mlp-mixer'],
-        default='default',
+        default='cnn',
         required=True,
     )
     parser.add_argument(
