@@ -14,15 +14,19 @@ def get_argument_parser():
     parser.add_argument(
         "--datasets_dir",
         type=str,
-        # required=True,
-        default="/cluster/scratch/aarslan/old_virtual_humans_data",  # fix
-        help='Dataset type should be "face" or "body_smplpix".',
+        required=True,
+        # default="/cluster/scratch/aarslan/virtual_humans_data",  # fix
+    )
+    parser.add_argument(
+        "--checkpoints_dir",
+        type=str,
+        # default="/cluster/scratch/aarslan/virtual_humans_data/checkpoints",  # fix
+        required=True,
     )
     parser.add_argument(
         "--dataset_type",
         type=str,
         required=True,
-        # default="face",
         help='Dataset type should be "face" or "body_smplpix".',
         choices=['face', 'body_smplpix']
     )
@@ -30,12 +34,12 @@ def get_argument_parser():
         "--discriminator_type",
         type=str,
         choices=['cnn', 'vit', 'mlp-mixer'],
-        default='default'
+        default='default',
+        required=True,
     )
     parser.add_argument(
         "--experiment_time",
         type=str,
-        # required=True,
         default="",
         help="Used in test.py",
     )
@@ -45,7 +49,6 @@ def get_argument_parser():
         default=100,
         help="Weight of l1 loss in generator loss.",
     )
-    parser.add_argument("--checkpoints_dir", type=str, default="../checkpoints")
     parser.add_argument("--generator_lr", type=float, default=2e-4)
     parser.add_argument("--discriminator_lr", type=float, default=2e-4)
     parser.add_argument("--seed", type=int, default=42)
@@ -274,6 +277,20 @@ def get_checkpoint_saver(
         discriminator=discriminator,
     )
     return checkpoint_saver
+
+
+def save_new_checkpoint(cfg, checkpoint_saver):
+    checkpoints_dir = get_checkpoints_dir(cfg)
+    # old_checkpoint_file_paths = [
+    #     os.path.join(checkpoints_dir, file_name)
+    #     for file_name in os.listdir(checkpoints_dir)
+    #     if file_name[:4] == "ckpt"
+    #     and os.path.isfile(os.path.join(checkpoints_dir, file_name))
+    # ]
+    # for old_checkpoint_file_path in old_checkpoint_file_paths:
+    #     os.system(f"rm -rf {old_checkpoint_file_path}")
+    checkpoint_prefix = os.path.join(checkpoints_dir, "ckpt")
+    checkpoint_saver.save(file_prefix=checkpoint_prefix)
 
 
 def restore_last_checkpoint(cfg, checkpoint_saver):
