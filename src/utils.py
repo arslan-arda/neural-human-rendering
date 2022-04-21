@@ -6,6 +6,7 @@ import argparse
 import numpy as np
 import tensorflow as tf
 from models import Generator, CNNDiscriminator
+from vit import create_vit_classifier
 
 
 def get_argument_parser():
@@ -27,12 +28,13 @@ def get_argument_parser():
         type=str,
         required=True,
         help='Dataset type should be "face" or "body_smplpix".',
+        choices=['face', 'body_smplpix']
     )
     parser.add_argument(
         "--discriminator_type",
         type=str,
-        required=True,
-        help='Discriminator type should be "cnn", "vit" or "mlp-mixer".',
+        choices=['cnn', 'vit', 'mlp-mixer'],
+        default='default'
     )
     parser.add_argument(
         "--experiment_time",
@@ -132,7 +134,7 @@ def get_model(cfg, model_type):
         if cfg["discriminator_type"] == "cnn":
             return CNNDiscriminator(cfg)
         elif cfg["discriminator_type"] == "vit":
-            raise NotImplementedError()
+            return create_vit_classifier(cfg)
         elif cfg["discriminator_type"] == "mlp-mixer":
             raise NotImplementedError()
         else:
@@ -169,16 +171,16 @@ def random_crop(input_image, real_image, image_height, image_width):
     random_start_x = np.random.randint(low=0, high=input_image.shape[1] - image_width)
 
     cropped_input_image = input_image[
-        random_start_y : random_start_y + image_height,
-        random_start_x : random_start_x + image_width,
-        :,
-    ]
+                          random_start_y: random_start_y + image_height,
+                          random_start_x: random_start_x + image_width,
+                          :,
+                          ]
 
     cropped_real_image = real_image[
-        random_start_y : random_start_y + image_height,
-        random_start_x : random_start_x + image_width,
-        :,
-    ]
+                         random_start_y: random_start_y + image_height,
+                         random_start_x: random_start_x + image_width,
+                         :,
+                         ]
 
     return cropped_input_image, cropped_real_image
 
@@ -263,7 +265,7 @@ def get_checkpoints_dir(cfg):
 
 
 def get_checkpoint_saver(
-    cfg, generator, discriminator, generator_optimizer, discriminator_optimizer
+        cfg, generator, discriminator, generator_optimizer, discriminator_optimizer
 ):
     checkpoints_dir = get_checkpoints_dir(cfg)
     checkpoint_prefix = os.path.join(checkpoints_dir, "ckpt")
