@@ -282,7 +282,7 @@ def get_checkpoint_dir(cfg):
 
 # CAN WE DELETE CFG
 def get_checkpoint_saver(
-        cfg, generator, discriminator, generator_optimizer, discriminator_optimizer
+        cfg, generator, discriminator, generator_optimizer, discriminator_optimizer, iterator
 ):
     checkpoint_saver = tf.train.Checkpoint(
         step=tf.Variable(1),
@@ -290,6 +290,7 @@ def get_checkpoint_saver(
         discriminator_optimizer=discriminator_optimizer,
         generator=generator,
         discriminator=discriminator,
+        iterator=iterator
     )
     return checkpoint_saver
 

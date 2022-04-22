@@ -64,7 +64,8 @@ def train(
     val_ds,
     summary_writer,
     checkpoint_saver,
-    manager
+    manager,
+    iterator
 ):
     checkpoint_saver.restore(manager.latest_checkpoint)
     if manager.latest_checkpoint:
@@ -76,20 +77,10 @@ def train(
 
     start = time.time()
 
-    for iteration, (input_image, target) in (
-        train_ds.repeat().take(cfg["num_iterations"]).enumerate()
-    ):
-        if (iteration) % 1000 == 0:
+    for _ in range(100000):
+        iteration = int(checkpoint_saver.step)
 
-            if iteration != 0:
-                print(f"Time taken for 10s0 iterations: {time.time()-start:.2f} sec\n")
-
-            start = time.time()
-
-            generate_intermediate_images(
-                cfg, generator, example_input, example_target, iteration
-            )
-            print(f"Iteration: {iteration//1000}k")
+        (input_image, target) = next(iterator)
 
         train_step(
             cfg,
@@ -100,7 +91,7 @@ def train(
             input_image,
             target,
             summary_writer,
-            iteration,
+            iteration
         )
 
         checkpoint_saver.step.assign_add(1)
@@ -109,7 +100,16 @@ def train(
         if (iteration + 1) % 10 == 0:
             print(".", end="", flush=True)
 
-        if int(checkpoint_saver.step) % 1000 == 0:
+        if iteration % 1000 == 0:
             save_path = manager.save()
-            print("\n Saved checkpoint for step {}: {} \n".format(int(checkpoint_saver.step), save_path))
+            print("\n Saved checkpoint for step {}: {} \n".format(iteration + 1, save_path))
             #print("loss {:1.2f}".format(loss.numpy()))
+            if iteration != 0:
+                print(f"Time taken for 10s0 iterations: {time.time()-start:.2f} sec\n")
+
+            start = time.time()
+
+            generate_intermediate_images(
+                cfg, generator, example_input, example_target, iteration
+            )
+            print(f"Iteration: {iteration//1000}k")

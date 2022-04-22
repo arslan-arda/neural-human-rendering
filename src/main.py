@@ -50,8 +50,10 @@ if __name__ == "__main__":
     generator_optimizer = get_optimizer(cfg, optimizer_type="generator")
     discriminator_optimizer = get_optimizer(cfg, optimizer_type="discriminator")
 
+    iterator = iter(train_ds.repeat().take(cfg["num_iterations"]))
+
     checkpoint_saver = get_checkpoint_saver(
-        cfg, generator, discriminator, generator_optimizer, discriminator_optimizer
+        cfg, generator, discriminator, generator_optimizer, discriminator_optimizer, iterator
     )
     manager = get_manager(cfg, checkpoint_saver)
     
@@ -67,7 +69,8 @@ if __name__ == "__main__":
         val_ds,
         summary_writer,
         checkpoint_saver,
-        manager
+        manager,
+        iterator
     )
 
     generate_final_images(cfg, generator, test_ds)
