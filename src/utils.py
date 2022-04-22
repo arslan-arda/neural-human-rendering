@@ -281,6 +281,7 @@ def get_checkpoint_saver(
     )
     return checkpoint_saver
 
+
 def get_manager(cfg, checkpoint_saver):
     checkpoints_dir = get_checkpoints_dir(cfg)
     manager = tf.train.CheckpointManager(checkpoint_saver, checkpoints_dir, max_to_keep=3)
