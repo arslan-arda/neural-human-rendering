@@ -65,6 +65,10 @@ def get_argument_parser():
     parser.add_argument("--num_transformer_layers", type=int, default=8, help="")
     parser.add_argument("--num_classes", type=int, default=2, help="")
 
+    # FID
+    parser.add_argument("--dims", type=int, default=2048, help="")
+    parser.add_argument("--num_workers", type=int, default=None, help="")
+
     return parser
 
 
