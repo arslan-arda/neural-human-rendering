@@ -12,7 +12,6 @@ from utils import (
     get_checkpoint_saver,
     get_manager,
     get_summary_writer,
-    restore_last_checkpoint,
     generate_final_images,
 )
 

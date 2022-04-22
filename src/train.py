@@ -111,5 +111,5 @@ def train(
 
         if int(checkpoint_saver.step) % 1000 == 0:
             save_path = manager.save()
-            print("Saved checkpoint for step {}: {}".format(int(checkpoint_saver.step), save_path))
+            print("\n Saved checkpoint for step {}: {} \n".format(int(checkpoint_saver.step), save_path))
             #print("loss {:1.2f}".format(loss.numpy()))

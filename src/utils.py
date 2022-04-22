@@ -38,6 +38,12 @@ def get_argument_parser():
         required=True,
     )
     parser.add_argument(
+        "--experiment_name",
+        type=str,
+        default="",
+        help="checkpoint experiment name",
+    )
+    parser.add_argument(
         "--experiment_time",
         type=str,
         default="",
@@ -262,13 +268,19 @@ def get_new_directory(folder_names):
     os.makedirs(joined_directory, exist_ok=True)
     return joined_directory
 
-
+# CAN WE DELETE THAT
 def get_checkpoints_dir(cfg):
     return get_new_directory(
         [cfg["checkpoints_dir"], f"experiment_{cfg['experiment_time']}"]
     )
 
 
+def get_checkpoint_dir(cfg):
+    return get_new_directory(
+        [cfg["checkpoints_dir"], cfg["experiment_name"]]
+    )
+
+# CAN WE DELETE CFG
 def get_checkpoint_saver(
         cfg, generator, discriminator, generator_optimizer, discriminator_optimizer
 ):
@@ -283,11 +295,11 @@ def get_checkpoint_saver(
 
 
 def get_manager(cfg, checkpoint_saver):
-    checkpoints_dir = get_checkpoints_dir(cfg)
+    checkpoints_dir = get_checkpoint_dir(cfg)
     manager = tf.train.CheckpointManager(checkpoint_saver, checkpoints_dir, max_to_keep=3)
     return manager
 
-
+# CAN WE DELETE THAT
 def save_new_checkpoint(cfg, checkpoint_saver):
     checkpoints_dir = get_checkpoints_dir(cfg)
     # old_checkpoint_file_paths = [
@@ -303,7 +315,7 @@ def save_new_checkpoint(cfg, checkpoint_saver):
 
 
 def restore_last_checkpoint(cfg, checkpoint_saver):
-    checkpoints_dir = get_checkpoints_dir(cfg)
+    checkpoints_dir = get_checkpoint_dir(cfg)
     checkpoint_saver.restore(tf.train.latest_checkpoint(checkpoints_dir))
 
 
