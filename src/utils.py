@@ -34,7 +34,8 @@ def get_argument_parser():
         "--discriminator_type",
         type=str,
         choices=['cnn', 'vit', 'mlp-mixer'],
-        default='default'
+        default='cnn',
+        required=True,
     )
     parser.add_argument(
         "--experiment_time",
@@ -333,7 +334,7 @@ def generate_final_images(cfg, model, test_ds):
     for test_input, _ in test_ds:
         prediction = model(test_input, training=True)
         # Getting the pixel values in the [0, 255] range to plot.
-        prediction = ((prediction.numpy() * 0.5 + 0.5) * 255).astype(np.int32)
+        # prediction = ((prediction.numpy() * 0.5 + 0.5) * 255).astype(np.int32)
         for i in range(prediction.shape[0]):
             cv2.imwrite(
                 os.path.join(
