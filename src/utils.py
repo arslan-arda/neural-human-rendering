@@ -43,7 +43,7 @@ def get_argument_parser():
     parser.add_argument(
         "--l1_weight",
         type=int,
-        default=100,
+        default=10,
         help="Weight of l1 loss in generator loss.",
     )
     parser.add_argument("--generator_lr", type=float, default=2e-4)
@@ -61,6 +61,8 @@ def get_argument_parser():
     parser.add_argument("--num_heads", type=int, default=4, help="")
     parser.add_argument("--num_transformer_layers", type=int, default=8, help="")
     parser.add_argument("--num_classes", type=int, default=2, help="")
+
+    # FID
 
     return parser
 
@@ -278,14 +280,6 @@ def get_checkpoint_saver(
 
 def save_new_checkpoint(cfg, checkpoint_saver):
     checkpoints_dir = get_checkpoints_dir(cfg)
-    # old_checkpoint_file_paths = [
-    #     os.path.join(checkpoints_dir, file_name)
-    #     for file_name in os.listdir(checkpoints_dir)
-    #     if file_name[:4] == "ckpt"
-    #     and os.path.isfile(os.path.join(checkpoints_dir, file_name))
-    # ]
-    # for old_checkpoint_file_path in old_checkpoint_file_paths:
-    #     os.system(f"rm -rf {old_checkpoint_file_path}")
     checkpoint_prefix = os.path.join(checkpoints_dir, "ckpt")
     checkpoint_saver.save(file_prefix=checkpoint_prefix)
 
