@@ -28,13 +28,13 @@ def get_argument_parser():
         type=str,
         required=True,
         help='Dataset type should be "face" or "body_smplpix".',
-        choices=['face', 'body_smplpix']
+        choices=["face", "body_smplpix"],
     )
     parser.add_argument(
         "--discriminator_type",
         type=str,
-        choices=['cnn', 'vit', 'mlp-mixer'],
-        default='cnn',
+        choices=["cnn", "vit", "mlp-mixer"],
+        default="cnn",
         required=True,
     )
     parser.add_argument(
@@ -46,7 +46,7 @@ def get_argument_parser():
     parser.add_argument(
         "--l1_weight",
         type=int,
-        default=100,
+        default=10,
         help="Weight of l1 loss in generator loss.",
     )
     parser.add_argument("--generator_lr", type=float, default=2e-4)
@@ -66,8 +66,9 @@ def get_argument_parser():
     parser.add_argument("--num_classes", type=int, default=2, help="")
 
     # FID
-    parser.add_argument("--dims", type=int, default=2048, help="")
-    parser.add_argument("--num_workers", type=int, default=None, help="")
+    parser.add_argument("--fid_dims", type=int, default=2048, help="")
+    parser.add_argument("--fid_num_workers", type=int, default=None, help="")
+    parser.add_argument("--fid_batch_size", type=int, default=64, help="")
 
     return parser
 
@@ -176,16 +177,16 @@ def random_crop(input_image, real_image, image_height, image_width):
     random_start_x = np.random.randint(low=0, high=input_image.shape[1] - image_width)
 
     cropped_input_image = input_image[
-                          random_start_y: random_start_y + image_height,
-                          random_start_x: random_start_x + image_width,
-                          :,
-                          ]
+        random_start_y : random_start_y + image_height,
+        random_start_x : random_start_x + image_width,
+        :,
+    ]
 
     cropped_real_image = real_image[
-                         random_start_y: random_start_y + image_height,
-                         random_start_x: random_start_x + image_width,
-                         :,
-                         ]
+        random_start_y : random_start_y + image_height,
+        random_start_x : random_start_x + image_width,
+        :,
+    ]
 
     return cropped_input_image, cropped_real_image
 
@@ -270,7 +271,7 @@ def get_checkpoints_dir(cfg):
 
 
 def get_checkpoint_saver(
-        cfg, generator, discriminator, generator_optimizer, discriminator_optimizer
+    cfg, generator, discriminator, generator_optimizer, discriminator_optimizer
 ):
     checkpoints_dir = get_checkpoints_dir(cfg)
     checkpoint_prefix = os.path.join(checkpoints_dir, "ckpt")
@@ -285,14 +286,6 @@ def get_checkpoint_saver(
 
 def save_new_checkpoint(cfg, checkpoint_saver):
     checkpoints_dir = get_checkpoints_dir(cfg)
-    # old_checkpoint_file_paths = [
-    #     os.path.join(checkpoints_dir, file_name)
-    #     for file_name in os.listdir(checkpoints_dir)
-    #     if file_name[:4] == "ckpt"
-    #     and os.path.isfile(os.path.join(checkpoints_dir, file_name))
-    # ]
-    # for old_checkpoint_file_path in old_checkpoint_file_paths:
-    #     os.system(f"rm -rf {old_checkpoint_file_path}")
     checkpoint_prefix = os.path.join(checkpoints_dir, "ckpt")
     checkpoint_saver.save(file_prefix=checkpoint_prefix)
 
@@ -338,7 +331,6 @@ def generate_final_images(cfg, model, test_ds):
     for test_input, _ in test_ds:
         prediction = model(test_input, training=True)
         # Getting the pixel values in the [0, 255] range to plot.
-        # prediction = ((prediction.numpy() * 0.5 + 0.5) * 255).astype(np.int32)
         for i in range(prediction.shape[0]):
             cv2.imwrite(
                 os.path.join(
