@@ -50,7 +50,7 @@ if __name__ == "__main__":
     generator_optimizer = get_optimizer(cfg, optimizer_type="generator")
     discriminator_optimizer = get_optimizer(cfg, optimizer_type="discriminator")
 
-    iterator = iter(train_ds.repeat().take(cfg["num_iterations"]))
+    iterator = iter(train_ds.repeat())
 
     checkpoint_saver = get_checkpoint_saver(
         cfg, generator, discriminator, generator_optimizer, discriminator_optimizer, iterator
