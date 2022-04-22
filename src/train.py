@@ -80,7 +80,7 @@ def train(
     for _ in range(100000):
         iteration = int(checkpoint_saver.step)
 
-        (input_image, target) = next(iterator)
+        input_image, target = next(iterator)
 
         train_step(
             cfg,
