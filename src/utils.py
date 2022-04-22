@@ -272,15 +272,19 @@ def get_checkpoints_dir(cfg):
 def get_checkpoint_saver(
         cfg, generator, discriminator, generator_optimizer, discriminator_optimizer
 ):
-    checkpoints_dir = get_checkpoints_dir(cfg)
-    checkpoint_prefix = os.path.join(checkpoints_dir, "ckpt")
     checkpoint_saver = tf.train.Checkpoint(
+        step=tf.Variable(1),
         generator_optimizer=generator_optimizer,
         discriminator_optimizer=discriminator_optimizer,
         generator=generator,
         discriminator=discriminator,
     )
     return checkpoint_saver
+
+def get_manager(cfg, checkpoint_saver):
+    checkpoints_dir = get_checkpoints_dir(cfg)
+    manager = tf.train.CheckpointManager(checkpoint_saver, checkpoints_dir, max_to_keep=3)
+    return manager
 
 
 def save_new_checkpoint(cfg, checkpoint_saver):

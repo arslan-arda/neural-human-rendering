@@ -64,7 +64,14 @@ def train(
     val_ds,
     summary_writer,
     checkpoint_saver,
+    manager
 ):
+    checkpoint_saver.restore(manager.latest_checkpoint)
+    if manager.latest_checkpoint:
+        print("Restored from {}".format(manager.latest_checkpoint))
+    else:
+        print("Initializing from scratch.")
+
     example_input, example_target = next(iter(val_ds.take(1)))
 
     start = time.time()
@@ -96,10 +103,13 @@ def train(
             iteration,
         )
 
+        checkpoint_saver.step.assign_add(1)
+
         # Training step
         if (iteration + 1) % 10 == 0:
             print(".", end="", flush=True)
 
-        # Save (checkpoint) the model every 5k steps
-        if (iteration + 1) % 5000 == 0:
-            save_new_checkpoint(cfg, checkpoint_saver)
+        if int(checkpoint_saver.step) % 5000 == 0:
+            save_path = manager.save()
+            print("Saved checkpoint for step {}: {}".format(int(checkpoint_saver.step), save_path))
+            #print("loss {:1.2f}".format(loss.numpy()))

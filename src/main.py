@@ -10,6 +10,7 @@ from utils import (
     get_model,
     get_optimizer,
     get_checkpoint_saver,
+    get_manager,
     get_summary_writer,
     restore_last_checkpoint,
     generate_final_images,
@@ -53,6 +54,8 @@ if __name__ == "__main__":
     checkpoint_saver = get_checkpoint_saver(
         cfg, generator, discriminator, generator_optimizer, discriminator_optimizer
     )
+    manager = get_manager(cfg, checkpoint_saver)
+    
     summary_writer = get_summary_writer(cfg)
 
     train(
@@ -65,8 +68,7 @@ if __name__ == "__main__":
         val_ds,
         summary_writer,
         checkpoint_saver,
+        manager
     )
-
-    restore_last_checkpoint(cfg, checkpoint_saver)
 
     generate_final_images(cfg, generator, test_ds)
