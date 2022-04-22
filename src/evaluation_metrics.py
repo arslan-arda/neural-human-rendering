@@ -1,6 +1,7 @@
 import os
 import lpips
 import torch
+import lpips
 import pytorch_fid
 import math
 import numpy as np
@@ -85,26 +86,32 @@ def ssim_multiple_channels(img1, img2):
         raise ValueError("Wrong input image dimensions.")
 
 
-def get_ssim(cfg):
+def get_dataset_paths(cfg):
     gt_dataset_path = os.path.join(
         cfg["datasets_dir"], cfg["dataset_type"], "test", "output"
     )
     gt_image_paths = [
         os.path.join(gen_dataset_path, gt_image_name)
-        for gt_image_name in os.listdir(gt_dataset_path)
+        for gt_image_name in sorted(os.listdir(gt_dataset_path))
         if gt_image_name[-4:] == ".png"
     ]
 
     gen_dataset_path = os.path.join(get_checkpoints_dir(cfg), "final_images")
     gen_image_paths = [
         os.path.join(gen_dataset_path, gt_image_name)
-        for gt_image_name in os.listdir(gt_dataset_path)
+        for gt_image_name in sorted(os.listdir(gt_dataset_path))
         if gt_image_name[-4:] == ".png"
     ]
 
     assert len(gt_image_paths) == len(
         gen_image_paths
     ), "Number of images in generated dataset should be equal to number of images in ground truth dataset."
+
+    return gen_image_paths, gt_image_paths
+
+
+def get_ssim(cfg):
+    gen_image_paths, gt_image_paths = get_dataset_paths(cfg)
 
     ssim_sum = 0
     ssim_count = 0
@@ -118,11 +125,31 @@ def get_ssim(cfg):
     return ssim_sum / ssim_count
 
 
-# import lpips
-# loss_fn_alex = lpips.LPIPS(net='alex') # best forward scores
-# loss_fn_vgg = lpips.LPIPS(net='vgg') # closer to "traditional" perceptual loss, when used for optimization
+def get_lpips(cfg, lpips_type):
+    gen_image_paths, gt_image_paths = get_dataset_paths(cfg)
 
-# import torch
-# img0 = torch.zeros(1,3,64,64) # image should be RGB, IMPORTANT: normalized to [-1,1]
-# img1 = torch.zeros(1,3,64,64)
-# d = loss_fn_alex(img0, img1)
+    lpips_sum = 0
+    lpips_count = 0
+
+    if lpips_type == "alex":
+        lpips_function = lpips.LPIPS(net="alex")
+    elif lpips_type == "vgg":
+        lpips_function = lpips.LPIPS(net="vgg")
+    else:
+        raise Exception(f"Not a valid lpips_function {lpips_function}.")
+
+    def read_and_process_image(image_path):
+        image = cv2.imread(gen_image_path)[:, :, [2, 1, 0]]  # (H, W, RGB)
+        image = np.transpose(image, (2, 0, 1))  # (RGB, H, W)
+        image = (image / 255.0) * 2.0 - 1.0  # (RGB, H, W), between [-1, 1]
+        image = torch.tensor([image])  # (1, RGB, H, W), between [-1, 1]
+        return image
+
+    for gen_image_path, gt_image_path in zip(gen_image_paths, gt_image_paths):
+        gen_image = read_and_process_image(gen_image_path)
+        gt_image = read_and_process_image(gt_image_path)
+
+        lpips_sum += lpips_function(gen_image, gt_image)
+        lpips_count += 1
+
+    return lpips_sum / lpips_count

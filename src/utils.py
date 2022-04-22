@@ -6,6 +6,7 @@ import argparse
 import numpy as np
 import tensorflow as tf
 from models import Generator, CNNDiscriminator
+from vit import create_vit_classifier
 
 
 def get_argument_parser():
@@ -27,12 +28,14 @@ def get_argument_parser():
         type=str,
         required=True,
         help='Dataset type should be "face" or "body_smplpix".',
+        choices=["face", "body_smplpix"],
     )
     parser.add_argument(
         "--discriminator_type",
         type=str,
+        choices=["cnn", "vit", "mlp-mixer"],
+        default="cnn",
         required=True,
-        help='Discriminator type should be "cnn", "vit" or "mlp-mixer".',
     )
     parser.add_argument(
         "--experiment_time",
@@ -63,6 +66,9 @@ def get_argument_parser():
     parser.add_argument("--num_classes", type=int, default=2, help="")
 
     # FID
+    parser.add_argument("--fid_dims", type=int, default=2048, help="")
+    parser.add_argument("--fid_num_workers", type=int, default=None, help="")
+    parser.add_argument("--fid_batch_size", type=int, default=64, help="")
 
     return parser
 
@@ -134,7 +140,7 @@ def get_model(cfg, model_type):
         if cfg["discriminator_type"] == "cnn":
             return CNNDiscriminator(cfg)
         elif cfg["discriminator_type"] == "vit":
-            raise NotImplementedError()
+            return create_vit_classifier(cfg)
         elif cfg["discriminator_type"] == "mlp-mixer":
             raise NotImplementedError()
         else:
@@ -325,7 +331,6 @@ def generate_final_images(cfg, model, test_ds):
     for test_input, _ in test_ds:
         prediction = model(test_input, training=True)
         # Getting the pixel values in the [0, 255] range to plot.
-        prediction = ((prediction.numpy() * 0.5 + 0.5) * 255).astype(np.int32)
         for i in range(prediction.shape[0]):
             cv2.imwrite(
                 os.path.join(
