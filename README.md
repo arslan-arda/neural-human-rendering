@@ -37,24 +37,54 @@ cd src
 module load gcc/8.2.0 python_gpu/3.9.9
 ```
 
-### Original Pix2Pix on Face dataset
+### Train Original Pix2Pix on Face dataset
 
 ```
-bsub -n 4 -W 24:00 -R "rusage[mem=4096, ngpus_excl_p=1]" -R "select[gpu_mtotal0>=10240]" python main.py --datasets_dir /path/to/data/directory --dataset_type face --discriminator_type cnn --checkpoints_dir /path/to/checkpoints/directory
+bsub -n 4 -W 24:00 -R "rusage[mem=16384, ngpus_excl_p=1]" -R "select[gpu_mtotal0>=32768]" python train.py --datasets_dir /path/to/data/directory --dataset_type face --discriminator_type cnn --checkpoints_dir /path/to/checkpoints/directory
 ```
 
-### Original Pix2Pix on Body dataset
+### Train Original Pix2Pix on Body dataset
 
 ```
-bsub -n 4 -W 24:00 -R "rusage[mem=4096, ngpus_excl_p=1]" -R "select[gpu_mtotal0>=10240]" python main.py --datasets_dir /path/to/data/directory --dataset_type body_smplpix --discriminator_type cnn --checkpoints_dir /path/to/checkpoints/directory
+bsub -n 4 -W 24:00 -R "rusage[mem=16384, ngpus_excl_p=1]" -R "select[gpu_mtotal0>=32768]" python train.py --datasets_dir /path/to/data/directory --dataset_type body_smplpix --discriminator_type cnn --checkpoints_dir /path/to/checkpoints/directory
 ```
 
-### VIT Pix2Pix on Face dataset
+### Train VIT Pix2Pix on Face dataset
+
 ```
-bsub -n 4 -W 24:00 -R "rusage[mem=4096, ngpus_excl_p=1]" -R "select[gpu_mtotal0>=10240]" python main.py --datasets_dir /cluster/scratch/winklerr/data --dataset_type face --discriminator_type vit --vanilla --projection_dim 32 --num_heads 2 --num_transformer_layers 3
+bsub -n 4 -W 24:00 -R "rusage[mem=16384, ngpus_excl_p=1]" -R "select[gpu_mtotal0>=32768]" python train.py --datasets_dir /path/to/data/directory --dataset_type face --discriminator_type vit --vanilla --projection_dim 32 --num_heads 2 --num_transformer_layers 3 --checkpoints_dir /path/to/checkpoints/directory
 ```
 
-### VIT Pix2Pix on Body dataset
+### Train VIT Pix2Pix on Body dataset
+
 ```
-bsub -n 4 -W 24:00 -R "rusage[mem=4096, ngpus_excl_p=1]" -R "select[gpu_mtotal0>=10240]" python main.py --datasets_dir /cluster/scratch/winklerr/data --dataset_type body_smplpix --discriminator_type vit --vanilla --projection_dim 32 --num_heads 2 --num_transformer_layers 3
+bsub -n 4 -W 24:00 -R "rusage[mem=16384, ngpus_excl_p=1]" -R "select[gpu_mtotal0>=32768]" python train.py --datasets_dir /path/to/data/directory --dataset_type body_smplpix --discriminator_type vit --vanilla --projection_dim 32 --num_heads 2 --num_transformer_layers 3 --checkpoints_dir /path/to/checkpoints/directory
+```
+
+
+
+
+
+### Test Original Pix2Pix on Face dataset
+
+```
+bsub -n 4 -W 24:00 -R "rusage[mem=16384, ngpus_excl_p=1]" -R "select[gpu_mtotal0>=32768]" python test.py --datasets_dir /path/to/data/directory --dataset_type face --discriminator_type cnn --checkpoints_dir /path/to/checkpoints/directory --experiment_time BEGINNING_TIMESTAMP_OF_TRAIN_JOB
+```
+
+### Test Original Pix2Pix on Body dataset
+
+```
+bsub -n 4 -W 24:00 -R "rusage[mem=16384, ngpus_excl_p=1]" -R "select[gpu_mtotal0>=32768]" python test.py --datasets_dir /path/to/data/directory --dataset_type body_smplpix --discriminator_type cnn --checkpoints_dir /path/to/checkpoints/directory --experiment_time BEGINNING_TIMESTAMP_OF_TRAIN_JOB
+```
+
+### Test VIT Pix2Pix on Face dataset
+
+```
+bsub -n 4 -W 24:00 -R "rusage[mem=16384, ngpus_excl_p=1]" -R "select[gpu_mtotal0>=32768]" python test.py --datasets_dir /path/to/data/directory --dataset_type face --discriminator_type vit --vanilla --projection_dim 32 --num_heads 2 --num_transformer_layers 3 --checkpoints_dir /path/to/checkpoints/directory --experiment_time BEGINNING_TIMESTAMP_OF_TRAIN_JOB
+```
+
+### Test VIT Pix2Pix on Body dataset
+
+```
+bsub -n 4 -W 24:00 -R "rusage[mem=16384, ngpus_excl_p=1]" -R "select[gpu_mtotal0>=32768]" python test.py --datasets_dir /path/to/data/directory --dataset_type body_smplpix --discriminator_type vit --vanilla --projection_dim 32 --num_heads 2 --num_transformer_layers 3 --checkpoints_dir /path/to/checkpoints/directory --experiment_time BEGINNING_TIMESTAMP_OF_TRAIN_JOB
 ```

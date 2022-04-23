@@ -2,6 +2,7 @@ import os
 import cv2
 import time
 import random
+import pprint
 import argparse
 import numpy as np
 import tensorflow as tf
@@ -11,16 +12,10 @@ from vit import create_vit_classifier
 
 def get_argument_parser():
     parser = argparse.ArgumentParser(description="Arguments for running the script")
-    parser.add_argument(
-        "--datasets_dir",
-        type=str,
-        required=True,
-        # default="/cluster/scratch/aarslan/virtual_humans_data",  # fix
-    )
+    parser.add_argument("--datasets_dir", type=str, required=True)
     parser.add_argument(
         "--checkpoints_dir",
         type=str,
-        # default="/cluster/scratch/aarslan/virtual_humans_data/checkpoints",  # fix
         required=True,
     )
     parser.add_argument(
@@ -41,7 +36,7 @@ def get_argument_parser():
         "--experiment_time",
         type=str,
         default="",
-        help="Used in test.py",
+        help="To load a previous checkpoint. Used both in train.py and test.py",
     )
     parser.add_argument(
         "--l1_weight",
@@ -54,6 +49,9 @@ def get_argument_parser():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--buffer_size", type=int, default=1000)
     parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument(
+        "--save_checkpoint_every_iter", type=int, default=5000
+    )  # should be consistent if model will be loaded from a previous checkpoint
     parser.add_argument("--num_iterations", type=int, default=200000)
 
     # VIT
@@ -265,9 +263,7 @@ def get_new_directory(folder_names):
 
 
 def get_checkpoints_dir(cfg):
-    return get_new_directory(
-        [cfg["checkpoints_dir"], f"experiment_{cfg['experiment_time']}"]
-    )
+    return get_new_directory([cfg["checkpoints_dir"], cfg["experiment_time"]])
 
 
 def get_checkpoint_saver(
@@ -284,6 +280,13 @@ def get_checkpoint_saver(
     return checkpoint_saver
 
 
+def save_cfg(cfg):
+    checkpoints_dir = get_checkpoints_dir(cfg)
+    cfg_path = os.path.join(checkpoints_dir, "cfg.txt")
+    with open(cfg_path, "w") as cfg_writer:
+        cfg_writer.write(pprint.pformat(cfg, indent=4))
+
+
 def save_new_checkpoint(cfg, checkpoint_saver):
     checkpoints_dir = get_checkpoints_dir(cfg)
     checkpoint_prefix = os.path.join(checkpoints_dir, "ckpt")
@@ -292,7 +295,11 @@ def save_new_checkpoint(cfg, checkpoint_saver):
 
 def restore_last_checkpoint(cfg, checkpoint_saver):
     checkpoints_dir = get_checkpoints_dir(cfg)
-    checkpoint_saver.restore(tf.train.latest_checkpoint(checkpoints_dir))
+    last_checkpoint_path = tf.train.latest_checkpoint(checkpoints_dir)
+    checkpoint_saver.restore(last_checkpoint_path)
+    last_checkpoint_number = int(last_checkpoint_path.split("/")[-1].split("-")[-1])
+    start_iteration = last_checkpoint_number * cfg["save_checkpoint_every_iter"]
+    return start_iteration
 
 
 def get_summary_writer(cfg):
