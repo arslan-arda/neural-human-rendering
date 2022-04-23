@@ -12,10 +12,28 @@ from utils import (
 
 if __name__ == "__main__":
     cfg = get_argument_parser().parse_args().__dict__
-    assert (
-        cfg["experiment_time"].isdigit() and len(cfg["experiment_time"]) == 10
-    ), "experiment_time should be a string of length 10."
     set_seeds(cfg)
+    assert (
+        cfg["experiment_time"].isdigit()
+        and isinstance(cfg["experiment_time"], str)
+        and len(cfg["experiment_time"]) == 10
+    ), "experiment_time should be a string of length 10."
+
+    cfg["mlp_head_units"] = [2048, 1024]
+    cfg["transformer_units"] = [cfg["projection_dim"] * 2, cfg["projection_dim"]]
+
+    if cfg["dataset_type"] == "face":
+        cfg["num_in_channels"] = 1
+        cfg["num_out_channels"] = 3
+        cfg["image_height"] = 256
+        cfg["image_width"] = 256
+    elif cfg["dataset_type"] == "body_smplpix":
+        cfg["num_in_channels"] = 3
+        cfg["num_out_channels"] = 3
+        cfg["image_height"] = 256
+        cfg["image_width"] = 256
+    else:
+        raise Exception(f"Not a valid dataset_type {dataset_type}.")
 
     generator = get_model(cfg, model_type="generator")
     discriminator = get_model(cfg, model_type="discriminator")
