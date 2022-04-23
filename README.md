@@ -1,8 +1,3 @@
-
----- remove
-bsub -n 4 -W 24:00 -R "rusage[mem=4096, ngpus_excl_p=1]" -R "select[gpu_mtotal0>=10240]" python train.py --datasets_dir /cluster/scratch/aarslan/virtual_humans_data --dataset_type face --discriminator_type cnn --checkpoints_dir /cluster/scratch/aarslan/virtual_humans_checkpoints
----- 
-
 # Virtual Humans Course Project: Vision Transformers for Neural Human Rendering
 
 ## Install Miniconda

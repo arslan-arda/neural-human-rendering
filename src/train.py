@@ -6,6 +6,7 @@ import time
 from itertools import islice
 
 from utils import (
+    save_cfg,
     generate_intermediate_images,
     generator_loss,
     discriminator_loss,
@@ -159,6 +160,8 @@ if __name__ == "__main__":
         retraining = True
     else:
         raise Exception(f"Not a valid experiment_time {experiment_time}.")
+
+    save_cfg(cfg)
 
     generator = get_model(cfg, model_type="generator")
     discriminator = get_model(cfg, model_type="discriminator")

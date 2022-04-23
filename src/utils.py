@@ -2,6 +2,7 @@ import os
 import cv2
 import time
 import random
+import pprint
 import argparse
 import numpy as np
 import tensorflow as tf
@@ -277,6 +278,13 @@ def get_checkpoint_saver(
         discriminator=discriminator,
     )
     return checkpoint_saver
+
+
+def save_cfg(cfg):
+    checkpoints_dir = get_checkpoints_dir(cfg)
+    cfg_path = os.path.join(checkpoints_dir, "cfg.txt")
+    with open(cfg_path, "w") as cfg_writer:
+        cfg_writer.write(pprint.pformat(cfg, indent=4))
 
 
 def save_new_checkpoint(cfg, checkpoint_saver):
