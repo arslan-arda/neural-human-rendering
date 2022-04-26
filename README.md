@@ -42,13 +42,13 @@ If you want to keep training using a previous checkpoint use --experiment_time T
 ### Train Original Pix2Pix on Face dataset
 
 ```
-bsub -n 4 -W 24:00 -R "rusage[mem=16384, ngpus_excl_p=1]" -R "select[gpu_mtotal0>=32768]" python train.py --datasets_dir /cluster/scratch/aarslan/virtual_humans_data --dataset_type face --discriminator_type cnn --checkpoints_dir /cluster/scratch/aarslan/virtual_humans_checkpoints --l1_weight 1 --discriminator_lr 0.001 --generator_lr 0.001
+bsub -n 4 -W 24:00 -R "rusage[mem=16384, ngpus_excl_p=1]" -R "select[gpu_mtotal0>=32768]" python train.py --datasets_dir /path/to/data/directory --dataset_type face --discriminator_type cnn --checkpoints_dir /path/to/checkpoints/directory
 ```
 
 ### Train Original Pix2Pix on Body dataset
 
 ```
-bsub -n 4 -W 24:00 -R "rusage[mem=8192, ngpus_excl_p=1]" -R "select[gpu_mtotal0>=10240]" python train.py --datasets_dir /cluster/scratch/aarslan/virtual_humans_data --dataset_type body_smplpix --discriminator_type cnn --checkpoints_dir /cluster/scratch/aarslan/virtual_humans_checkpoints --l1_weight 1 --discriminator_lr 0.0002 --generator_lr 0.0002
+bsub -n 4 -W 24:00 -R "rusage[mem=8192, ngpus_excl_p=1]" -R "select[gpu_mtotal0>=10240]" python train.py --datasets_dir /path/to/data/directory --dataset_type body_smplpix --discriminator_type cnn --checkpoints_dir /path/to/checkpoints/directory
 ```
 
 ### Train VIT Pix2Pix on Face dataset
