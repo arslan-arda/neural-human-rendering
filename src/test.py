@@ -9,6 +9,7 @@ from utils import (
     get_dataset,
 )
 
+from evaluation_metrics import save_evaluation_scores_of_final_images
 
 if __name__ == "__main__":
     cfg = get_argument_parser().parse_args().__dict__
@@ -50,3 +51,5 @@ if __name__ == "__main__":
     restore_last_checkpoint(cfg, checkpoint_saver)
 
     generate_final_images(cfg, generator, test_ds)
+
+    save_evaluation_scores_of_final_images(cfg)

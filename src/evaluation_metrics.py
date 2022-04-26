@@ -10,10 +10,7 @@ from utils import get_checkpoints_dir
 
 
 def get_fid(cfg):
-    if cfg["fid_device"] is None:
-        device = torch.device("cuda" if (torch.cuda.is_available()) else "cpu")
-    else:
-        device = torch.device(cfg["fid_device"])
+    device = torch.device("cuda" if (torch.cuda.is_available()) else "cpu")
 
     if cfg["fid_num_workers"] is None:
         num_avail_cpus = len(os.sched_getaffinity(0))
@@ -91,16 +88,16 @@ def get_dataset_paths(cfg):
         cfg["datasets_dir"], cfg["dataset_type"], "test", "output"
     )
     gt_image_paths = [
-        os.path.join(gen_dataset_path, gt_image_name)
+        os.path.join(gt_dataset_path, gt_image_name)
         for gt_image_name in sorted(os.listdir(gt_dataset_path))
         if gt_image_name[-4:] == ".png"
     ]
 
     gen_dataset_path = os.path.join(get_checkpoints_dir(cfg), "final_images")
     gen_image_paths = [
-        os.path.join(gen_dataset_path, gt_image_name)
-        for gt_image_name in sorted(os.listdir(gt_dataset_path))
-        if gt_image_name[-4:] == ".png"
+        os.path.join(gen_dataset_path, gen_image_name)
+        for gen_image_name in sorted(os.listdir(gen_dataset_path))
+        if gen_image_name[-4:] == ".png"
     ]
 
     assert len(gt_image_paths) == len(
@@ -126,30 +123,54 @@ def get_ssim(cfg):
 
 
 def get_lpips(cfg, lpips_type):
+    # device = torch.device("cuda" if (torch.cuda.is_available()) else "cpu")
+
     gen_image_paths, gt_image_paths = get_dataset_paths(cfg)
 
     lpips_sum = 0
     lpips_count = 0
 
     if lpips_type == "alex":
-        lpips_function = lpips.LPIPS(net="alex")
+        lpips_function = lpips.LPIPS(net="alex").float()
     elif lpips_type == "vgg":
-        lpips_function = lpips.LPIPS(net="vgg")
+        lpips_function = lpips.LPIPS(net="vgg").float()
     else:
         raise Exception(f"Not a valid lpips_function {lpips_function}.")
 
     def read_and_process_image(image_path):
-        image = cv2.imread(gen_image_path)[:, :, [2, 1, 0]]  # (H, W, RGB)
+        image = cv2.imread(image_path)[:, :, [2, 1, 0]]  # (H, W, RGB)
         image = np.transpose(image, (2, 0, 1))  # (RGB, H, W)
         image = (image / 255.0) * 2.0 - 1.0  # (RGB, H, W), between [-1, 1]
-        image = torch.tensor([image])  # (1, RGB, H, W), between [-1, 1]
+        image = (
+            torch.tensor(image).unsqueeze(0).float()
+        )  # (1, RGB, H, W), between [-1, 1]
         return image
 
     for gen_image_path, gt_image_path in zip(gen_image_paths, gt_image_paths):
         gen_image = read_and_process_image(gen_image_path)
         gt_image = read_and_process_image(gt_image_path)
 
-        lpips_sum += lpips_function(gen_image, gt_image)
+        lpips_sum += float(lpips_function.forward(gen_image, gt_image))
         lpips_count += 1
 
     return lpips_sum / lpips_count
+
+
+def save_evaluation_scores_of_final_images(cfg):
+    if cfg["dataset_type"] == "face":
+        scores = {"fid": get_fid(cfg)}
+    elif cfg["dataset_type"] == "body_smplpix":
+        scores = {
+            "ssim": get_ssim(cfg),
+            "lpips_alex": get_lpips(cfg, "alex"),
+            "lpips_vgg": get_lpips(cfg, "vgg"),
+        }
+    else:
+        raise Exception(f"Not a valid dataset_type {dataset_type}.")
+
+    evaluation_scores_path = os.path.join(
+        get_checkpoints_dir(cfg), "evaluation_scores.txt"
+    )
+    with open(evaluation_scores_path, "w") as writer:
+        for key, value in scores.items():
+            writer.write(f"{key}: {value}\n")

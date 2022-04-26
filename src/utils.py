@@ -12,16 +12,23 @@ from vit import create_vit_classifier
 
 def get_argument_parser():
     parser = argparse.ArgumentParser(description="Arguments for running the script")
-    parser.add_argument("--datasets_dir", type=str, required=True)
+    parser.add_argument(
+        "--datasets_dir",
+        type=str,
+        required=True,  # fix
+        # default="/cluster/scratch/aarslan/virtual_humans_data",  # fix
+    )
     parser.add_argument(
         "--checkpoints_dir",
         type=str,
-        required=True,
+        required=True,  # fix
+        # default="/cluster/scratch/aarslan/virtual_humans_checkpoints",  # fix
     )
     parser.add_argument(
         "--dataset_type",
         type=str,
-        required=True,
+        required=True,  # fix
+        default="body_smplpix",  # fix
         help='Dataset type should be "face" or "body_smplpix".',
         choices=["face", "body_smplpix"],
     )
@@ -30,7 +37,7 @@ def get_argument_parser():
         type=str,
         choices=["cnn", "vit", "mlp-mixer"],
         default="cnn",
-        required=True,
+        # required=True, # fix
     )
     parser.add_argument(
         "--experiment_time",
@@ -41,16 +48,17 @@ def get_argument_parser():
     parser.add_argument(
         "--l1_weight",
         type=int,
+        # required=True,
         default=10,
         help="Weight of l1 loss in generator loss.",
     )
-    parser.add_argument("--generator_lr", type=float, default=2e-4)
-    parser.add_argument("--discriminator_lr", type=float, default=2e-4)
+    parser.add_argument("--generator_lr", type=float, default=0.002)
+    parser.add_argument("--discriminator_lr", type=float, default=0.003)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--buffer_size", type=int, default=1000)
-    parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument(
-        "--save_checkpoint_every_iter", type=int, default=5000
+        "--save_checkpoint_every_iter", type=int, default=5000  # fix
     )  # should be consistent if model will be loaded from a previous checkpoint
     parser.add_argument("--num_iterations", type=int, default=200000)
 
