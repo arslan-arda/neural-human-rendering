@@ -2,7 +2,7 @@ import os
 import lpips
 import torch
 import lpips
-import pytorch_fid
+from pytorch_fid import fid_score
 import math
 import numpy as np
 import cv2
@@ -28,7 +28,7 @@ def get_fid(cfg):
 
     paths = [gt_dataset_path, gen_dataset_path]
 
-    fid_value = pytorch_fid.calculate_fid_given_paths(
+    fid_value = fid_score.calculate_fid_given_paths(
         paths, cfg["fid_batch_size"], device, cfg["fid_dims"], num_workers
     )
     return fid_value
